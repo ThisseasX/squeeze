@@ -1,4 +1,14 @@
-const { flow, reject, map, sum, eq, concat } = require('lodash/fp');
+const {
+  flow,
+  reject,
+  map,
+  sum,
+  eq,
+  concat,
+  get,
+  includes,
+  isEmpty,
+} = require('lodash/fp');
 
 const ROW_MAX = 12;
 const ROW_MIN = 3;
@@ -10,12 +20,13 @@ const tryPushTile = (remnants, currentRow, tile) => {
   const remainingAfter = remainingCapacity - size;
 
   if (remainingCapacity >= size) {
-    if (remainingAfter < ROW_MIN) {
-      currentRow = concat(currentRow, { component, size: remainingCapacity });
-    } else {
-      currentRow = concat(currentRow, tile);
-    }
-  } else {
+    currentRow = concat(
+      currentRow,
+      remainingAfter < ROW_MIN ? { component, size: remainingCapacity } : tile,
+    );
+
+    remnants = reject(eq(tile), remnants);
+  } else if (!includes(tile, remnants)) {
     remnants = concat(remnants, tile);
   }
 
@@ -50,7 +61,7 @@ const tryEmptyStack = (
       flow(
         args => ({
           ...args,
-          ...tryPushTile(reject(eq(tile), args.remnants), args.currentRow, tile),
+          ...tryPushTile(args.remnants, args.currentRow, tile),
         }),
         args => ({
           ...args,
@@ -59,13 +70,15 @@ const tryEmptyStack = (
         args =>
           isRemnantPhase
             ? args
-            : tryEmptyStack(args.remnants, args.rows, args.currentRow, [], true),
+            : tryEmptyStack(
+                reject(eq(tile), args.remnants),
+                args.rows,
+                args.currentRow,
+                args.remnants,
+                true,
+              ),
       )(res),
-    {
-      rows,
-      currentRow,
-      remnants,
-    },
+    { rows, currentRow, remnants },
   );
 
 const balanceRows = rows =>
@@ -77,18 +90,23 @@ const balanceRows = rows =>
       : row;
   });
 
-const arrangeTiles = tiles =>
+const getArrangement = (stack = [], rows = [], currentRow = []) =>
   flow(
-    args => tryEmptyStack(args),
+    args => tryEmptyStack(args.stack, args.rows, args.currentRow),
     args => ({
       ...args,
       ...finalizeRow(args.rows, args.currentRow),
     }),
-    args => ({
-      ...args,
-      ...tryEmptyStack(args.remnants, args.rows, args.currentRow),
-    }),
-    args => balanceRows(args.rows),
-  )(tiles);
+    args =>
+      isEmpty(args.remnants)
+        ? args
+        : getArrangement(args.remnants, args.rows, args.currentRow),
+  )({ stack, rows, currentRow });
+
+const arrangeTiles = tiles => flow(
+  getArrangement,
+  get('rows'),
+  balanceRows,
+)(tiles);
 
 module.exports = { arrangeTiles };
