@@ -16,12 +16,14 @@ const ROW_MIN = 3;
 
 const tryPushTile = (remnants, currentRow, tile) => {
   const remainingCapacity = ROW_MAX - flow(map('size'), sum)(currentRow);
-  const remainingAfter = remainingCapacity - tile.size;
+  const remainingAfter = remainingCapacity - tile.minSize;
 
-  if (remainingCapacity >= tile.size) {
+  if (remainingCapacity >= tile.minSize) {
     currentRow = concat(
       currentRow,
-      remainingAfter < ROW_MIN ? { ...tile, size: remainingCapacity } : tile,
+      remainingAfter < ROW_MIN
+        ? { ...tile, size: remainingCapacity }
+        : { ...tile, size: tile.minSize },
     );
 
     remnants = reject(eq(tile), remnants);
@@ -102,11 +104,12 @@ const getArrangement = (stack = [], rows = [], currentRow = []) =>
         : getArrangement(args.remnants, args.rows, args.currentRow),
   )({ stack, rows, currentRow });
 
-const arrangeTiles = tiles => flow(
-  sortBy('order'),
-  getArrangement,
-  get('rows'),
-  balanceRows,
-)(tiles);
+const arrangeTiles = tiles =>
+  flow(
+    sortBy('order'),
+    getArrangement,
+    get('rows'),
+    balanceRows,
+  )(tiles);
 
 module.exports = { arrangeTiles };
