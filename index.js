@@ -62,13 +62,13 @@ const tiles = [
 ];
 
 const testTiles = [
-  { component: '1', size: 8 },
-  { component: '2', size: 12 },
-  { component: '3', size: 6 },
-  { component: '4', size: 6 },
-  { component: '5', size: 4 },
-  { component: '6', size: 4 },
-  { component: '7', size: 12 },
+  { component: '1', size: 8, order: 4 },
+  { component: '2', size: 12, order: 3 },
+  { component: '3', size: 6, order: 2 },
+  { component: '4', size: 6, order: 5 },
+  { component: '5', size: 4, order: 1 },
+  { component: '6', size: 4, order: 6 },
+  { component: '7', size: 12, order: 0 },
 ];
 
 const printResult = rows => {

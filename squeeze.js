@@ -8,21 +8,20 @@ const {
   get,
   includes,
   isEmpty,
+  sortBy,
 } = require('lodash/fp');
 
 const ROW_MAX = 12;
 const ROW_MIN = 3;
 
 const tryPushTile = (remnants, currentRow, tile) => {
-  const { component, size } = tile;
-
   const remainingCapacity = ROW_MAX - flow(map('size'), sum)(currentRow);
-  const remainingAfter = remainingCapacity - size;
+  const remainingAfter = remainingCapacity - tile.size;
 
-  if (remainingCapacity >= size) {
+  if (remainingCapacity >= tile.size) {
     currentRow = concat(
       currentRow,
-      remainingAfter < ROW_MIN ? { component, size: remainingCapacity } : tile,
+      remainingAfter < ROW_MIN ? { ...tile, size: remainingCapacity } : tile,
     );
 
     remnants = reject(eq(tile), remnants);
@@ -104,6 +103,7 @@ const getArrangement = (stack = [], rows = [], currentRow = []) =>
   )({ stack, rows, currentRow });
 
 const arrangeTiles = tiles => flow(
+  sortBy('order'),
   getArrangement,
   get('rows'),
   balanceRows,
